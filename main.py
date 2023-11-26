@@ -31,9 +31,9 @@ def main():
     
     #----------------------------------
     
-    k = 1
+    k = 4 # height (2k)
     gen = MatrixTreeGenerator(k)
-    print(gen.zero_one_permutations(8))
+    M = gen.generate_matrix()
 
 if __name__ =='__main__':
     main()
