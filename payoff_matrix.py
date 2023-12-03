@@ -1,26 +1,15 @@
-"""
-Solve the following Linear Problem:
-
-    max z
-
-    z - X*A0 ≤ 0       equ: z ≤ X*A0
-    ...
-    z - X*An ≤ 0
-
-    sum(X) = 1 
-    X ≥ 0
-"""
-
 import numpy as np
 from scipy.optimize import linprog
-
+import random as rand
 class PayoffMatrix:
     def __init__(self, M) -> None:
         self.M = M
     
     def compute_row_strat(self):
         """
-        Solve linear problem assoiated to playoff matrix M: max min (Payoffs) for player R
+        Build linear problem (inequalities, objective) associated to playoff matrix M (Payoffs) for player Row
+        and call _lp_solve to solve it
+        return: results of the linear problem
         """
         n, m = self.M.shape
         c = [-1] + [0]*n  # objective function coeff (-z -> [-1, 0, 0, ..., 0])
@@ -40,7 +29,9 @@ class PayoffMatrix:
     
     def compute_col_strat(self):
         """
-        Solve linear problem assoiated to playoff matrix M: max min (Payoffs) for player C
+        Build linear problem (inequalities, objective) associated to playoff matrix M (Payoffs) for player Col
+        and call _lp_solve to solve it
+        return: results of the linear problem
         """
         n, m = self.M.shape
         c = [-1] + [0]*m  # objective function coeff (-z -> [-1, 0, 0, ..., 0])
@@ -57,10 +48,28 @@ class PayoffMatrix:
 
         return self._lp_solve(c, A_ub, b_ub, A_eq, b_eq, bounds)
     
-    def _lp_solve(self, c, A_ub, b_ub, A_eq, b_eq, bounds):
+    def _lp_solve(self, c, A_ub, b_ub, A_eq, b_eq, bounds) -> tuple[int, list[tuple]]:
+        """
+        solve LP problem wth cipy.linprog
+        return: tuple(z, p), with z the objective function value and p the best strategy (list of probabilities)
+        """
         result = linprog(c, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method='highs')
 
         z = - result.fun # Negate the result for maximization
         P = result.x
         strategy = P[1:] # variables without z
-        return strategy
+        return z, strategy
+    
+    def compute_rand_avg_complexity(self, it_num:int):
+        """
+        randomly computes the average number of leaves probed using the payoff matrix
+        return randomized average matrix value
+        """
+        res = 0
+        for _ in range(it_num):
+            i = rand.randint(0, len(self.M)-1)
+            j = rand.randint(0, len(self.M[0])-1)
+            val = self.M[i][j]
+            res += val
+        
+        return res/it_num
